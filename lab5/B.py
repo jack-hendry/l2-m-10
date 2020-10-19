@@ -3,6 +3,6 @@
 from A import *
 
 
-def function_AB():
-    print("AB")
-    function_A()
+def function_B():
+    print("B")
+    function_B()
