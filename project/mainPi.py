@@ -1,8 +1,15 @@
 import requests
-import json
 import urllib.parse
 import http.client
 import time
+import sqlite3
+from datetime import datetime, date
+
+portionSize = 500
+fullWaterWeight = 1000
+
+dbconnect = sqlite3.connect("/home/pi/documents/ SYSC 3010/Labs/Project/projectdb.db")
+cursor = dbconnect.cursor()
 
 
 def sendMessage(
@@ -69,32 +76,70 @@ def waitResponse():
 
 
 currentID = getMessage()["entry_id"]
-
-sendMessage(1, "to bailey")
+sendMessage(3, "to jack")
 if waitResponse():
     newMessage = getMessage()
-    currentID = newMessage["entry_id"]
-    print(newMessage["field1"])
-else:
-    print("failed")
 
-time.sleep(1)
+    waterBowlValue = newMessage["field2"]
+    waterStorageValue = newMessage["field1"]
 
-sendMessage(2, "to jediael")
-if waitResponse():
-    newMessage = getMessage()
-    currentID = newMessage["entry_id"]
-    print(newMessage["field1"])
-    print(newMessage["field2"])
+    print("water storage value:" + str(waterStorageValue))
+    print("water bowl value:" + str(waterBowlValue))
+
+    waterToFill = fullWaterWeight - waterBowlValue
+
+    sql = (
+        "INSERT INTO tblWaterLog (amountBefore, amountFilled, time) values("
+        + str(waterBowlValue)
+        + ", "
+        + str(waterToFill)
+        + ", "
+        + str(datetime.now())
+        + ");"
+    )
+    cursor.execute(sql)
+    dbconnect.commit()
+
 else:
     print("failed")
 
 time.sleep(2)
 
-sendMessage(3, "to jack")
+# storage field 1
+# weight field 2
+currentID = getMessage()["entry_id"]
+sendMessage(2, "to jediael")
 if waitResponse():
     newMessage = getMessage()
-    currentID = newMessage["entry_id"]
+
+    foodBowlValue = newMessage["field2"]
+    foodStorageValue = newMessage["field1"]
+
+    print("water storage value:" + str(foodStorageValue))
+    print("water bowl value:" + str(foodBowlValue))
+
+    foodToFill = portionSize - foodBowlValue
+
+    sql = (
+        "INSERT INTO tblFoodLog (amountBefore, amountFilled, time) values("
+        + str(foodBowlValue)
+        + ", "
+        + str(foodToFill)
+        + ", "
+        + str(datetime.now())
+        + ");"
+    )
+    cursor.execute(sql)
+    dbconnect.commit()
+else:
+    print("failed")
+
+time.sleep(2)
+
+currentID = getMessage()["entry_id"]
+sendMessage(1, "to bailey")
+if waitResponse():
+    newMessage = getMessage()
     print(newMessage["field1"])
 else:
     print("failed")
