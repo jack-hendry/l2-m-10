@@ -137,7 +137,7 @@ else:
 time.sleep(2)
 
 currentID = getMessage()["entry_id"]
-sendMessage(1, "to bailey")
+sendMessage(1, waterToFill, foodToFill)
 if waitResponse():
     newMessage = getMessage()
     print(newMessage["field1"])
