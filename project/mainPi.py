@@ -88,19 +88,19 @@ if waitResponse():
     print("water storage value:" + str(waterStorageValue))
     print("water bowl value:" + str(waterBowlValue))
 
-    waterToFill = fullWaterWeight - waterBowlValue
+    waterToFill = int(fullWaterWeight) - int(waterBowlValue)
 
-    sql = (
+    """ sql = (
         "INSERT INTO tblWaterLog (amountBefore, amountFilled, time) values("
         + str(waterBowlValue)
         + ", "
         + str(waterToFill)
         + ", "
-        + str(datetime.now())
+        + str("today")
         + ");"
     )
     cursor.execute(sql)
-    dbconnect.commit()
+    dbconnect.commit() """
 
 else:
     print("failed")
@@ -117,12 +117,12 @@ if waitResponse():
     foodBowlValue = newMessage["field2"]
     foodStorageValue = newMessage["field1"]
 
-    print("water storage value:" + str(foodStorageValue))
-    print("water bowl value:" + str(foodBowlValue))
+    print("food storage value:" + str(foodStorageValue))
+    print("food bowl value:" + str(foodBowlValue))
 
-    foodToFill = portionSize - foodBowlValue
+    foodToFill = int(portionSize) - int(foodBowlValue)
 
-    sql = (
+    """ sql = (
         "INSERT INTO tblFoodLog (amountBefore, amountFilled, time) values("
         + str(foodBowlValue)
         + ", "
@@ -132,7 +132,7 @@ if waitResponse():
         + ");"
     )
     cursor.execute(sql)
-    dbconnect.commit()
+    dbconnect.commit() """
 else:
     print("failed")
 
