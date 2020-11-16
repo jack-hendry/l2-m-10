@@ -73,6 +73,7 @@ currentID = getMessage()["entry_id"]
 sendMessage(1, "to bailey")
 if waitResponse():
     newMessage = getMessage()
+    currentID = newMessage["entry_id"]
     print(newMessage["field1"])
 else:
     print("failed")
@@ -82,15 +83,18 @@ time.sleep(1)
 sendMessage(2, "to jediael")
 if waitResponse():
     newMessage = getMessage()
+    currentID = newMessage["entry_id"]
     print(newMessage["field1"])
+    print(newMessage["field2"])
 else:
     print("failed")
 
-time.sleep(1)
+time.sleep(2)
 
 sendMessage(3, "to jack")
 if waitResponse():
     newMessage = getMessage()
+    currentID = newMessage["entry_id"]
     print(newMessage["field1"])
 else:
     print("failed")
