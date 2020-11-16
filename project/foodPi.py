@@ -25,21 +25,22 @@ def readData():
     
     
 keySend = "AB2DLL1XSNYHIU2O"
-def sendData(datum):
+def sendData(wt,dist):
     while True:
-        params = urllib.parse.urlencode({'field1': datum,'key':keySend })
+        params = urllib.parse.urlencode({'field1': dist, 'field2': wt, 'key': keySend })
         headers = {"Content-typZZe": "application/x-www-form-urlencoded","Accept": "text/plain"}
         conn = http.client.HTTPConnection("api.thingspeak.com:80")
         try:
             conn.request("POST", "/update", params, headers)
             response = conn.getresponse()
-            print (response.status, response.reason)
+            print(response.status, response.reason)
             data = response.read()
             conn.close()
             break
         except:
             print ("connection failed")
             break
+
 
 currentID = readData()['entry_id']
 while True:
@@ -48,8 +49,10 @@ while True:
         currentID += 1
         if field['field1'] == '2':
             grams = 300
-            sendData(grams)
-            print(field['field2'])
+            distance = 20
+            sendData(distance, grams)
+            time.sleep(1)
+            print("Distance and Weight sent")
             continue
 
 #if __name__ == "__main__":
