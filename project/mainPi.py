@@ -7,6 +7,8 @@ from datetime import datetime, date
 
 portionSize = 500
 fullWaterWeight = 1000
+waterToFill = 0
+foodToFill = 0
 
 dbconnect = sqlite3.connect("/home/pi/Documents/SYSC 3010/Labs/Project/projectdb.db")
 cursor = dbconnect.cursor()
