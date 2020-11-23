@@ -6,7 +6,7 @@ import sqlite3
 from datetime import datetime, date
 
 portionSize = 500
-fullWaterWeight = 1000
+waterBowlSize = 1000
 waterToFill = 0
 foodToFill = 0
 currentID = 0
