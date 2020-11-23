@@ -122,13 +122,13 @@ def foodMotor():
 
 #Checks if the current command instructs water pump
 def checkIfWater():
-    if ((currentCommand['field2'] != None) and (currentCommand['field3'] != None)):
+    if ((currentCommand['field2'] == True) and (currentCommand['field3'] != None)):
         dispenseWater(currentCommand['field3'])
 
 
 #Checks if the current command instructs the food pump
 def checkIfFood():
-    if ((currentCommand['field4'] !=None) and (currentCommand['field5'] != None)):
+    if ((currentCommand['field4'] ==True) and (currentCommand['field5'] != None)):
         dispenseFood(currentCommand['field5'])
 
 
