@@ -3,6 +3,19 @@ import requests
 import http.client
 import json
 import time
+import RPi.GPIO as GPIO
+import threading
+from hx711 import HX711
+from hcsr04 import HCSR04
+
+GPIO.setwarnings(False)
+hx = HX711(5, 6)
+hx.set_reading_format("MSB", "MSB")
+hx.set_reference_unit(95.20)
+hx.reset()
+hx.tare()
+
+hc = HCSR04(18, 24)
 
 
 def readData():
@@ -25,7 +38,7 @@ def readData():
     
     
 keySend = "AB2DLL1XSNYHIU2O"
-def sendData(wt,dist):
+def sendData(dist,wt):
     while True:
         params = urllib.parse.urlencode({'field1': dist, 'field2': wt, 'key': keySend })
         headers = {"Content-typZZe": "application/x-www-form-urlencoded","Accept": "text/plain"}
@@ -41,6 +54,13 @@ def sendData(wt,dist):
             print ("connection failed")
             break
 
+def getWeight():
+    wt = max(0, int(hx.get_weight(5)))
+    return wt
+
+def getDistance():
+    ht = hc.distance()
+    return ht
 
 currentID = readData()['entry_id']
 while True:
@@ -48,14 +68,11 @@ while True:
     if field['entry_id'] == (currentID+1):
         currentID += 1
         if field['field1'] == '2':
-            grams = 300
-            distance = 20
+            grams = getWeight()
+            time.sleep(0.1)
+            distance = getDistance()
             sendData(distance, grams)
             time.sleep(1)
             print("Distance and Weight sent")
+            print(field['field2'])
             continue
-
-#if __name__ == "__main__":
-    #grams = 300
-    #readData()
-    #sendData(grams)
