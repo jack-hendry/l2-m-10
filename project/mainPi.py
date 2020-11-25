@@ -10,9 +10,13 @@ waterBowlSize = 1000
 waterToFill = 0
 foodToFill = 0
 currentID = 0
+foodStorageValue = 0
+foodBowlValue = 0
+waterStorageValue = 0
+waterBowlValue = 0
 
-""" dbconnect = sqlite3.connect("/home/pi/Documents/SYSC 3010/Labs/Project/projectdb.db")
-cursor = dbconnect.cursor() """
+dbconnect = sqlite3.connect("/home/pi/Documents/SYSC 3010/Labs/Project/projectdb.db")
+cursor = dbconnect.cursor()
 
 
 def sendMessage(
@@ -77,54 +81,34 @@ def waitResponse():
             return True
         time.sleep(0.1)
 
-
-def test():
-    currentID = getMessage()["entry_id"]
-    sendMessage(3, "to jack 1")
-    if waitResponse():
-        newMessage = getMessage()
-
-        waterBowlValue = newMessage["field2"]
-        waterStorageValue = newMessage["field1"]
-
-        print("water storage value:" + str(waterStorageValue))
-        print("water bowl value:" + str(waterBowlValue))
-
-        waterToFill = int(fullWaterWeight) - int(waterBowlValue)
-
-        """ sql = (
-            "INSERT INTO tblWaterLog (amountBefore, amountFilled, time) values("
-            + str(waterBowlValue)
-            + ", "
-            + str(waterToFill)
-            + ", "
-            + str("today")
-            + ");"
-        )
-        cursor.execute(sql)
-        dbconnect.commit() """
-
-    else:
-        print("failed")
-
-    time.sleep(2)
-
-    # storage field 1
-    # weight field 2
+def checkFillFood():
+    foodStorageValue = 0
+    foodBowlValue = 0
     currentID = getMessage()["entry_id"]
     sendMessage(2, "to jediael 1")
     if waitResponse():
         newMessage = getMessage()
-
         foodBowlValue = newMessage["field2"]
         foodStorageValue = newMessage["field1"]
-
-        print("food storage value:" + str(foodStorageValue))
-        print("food bowl value:" + str(foodBowlValue))
+        print(foodStorageValue)
+        print(foodBowlValue)
 
         foodToFill = int(portionSize) - int(foodBowlValue)
+    else:
+        print("failed")
+        exit()
 
-        """ sql = (
+    if foodStorageValue < 1:
+        print("food storage empty")
+    elif foodBowlValue > 100000000:
+        print("food bowl full")
+    else:
+        time.sleep(1)
+        currentID = getMessage()["entry_id"]
+        sendMessage(1, None, None, True, foodToFill)
+        if waitResponse:
+            print("done")
+            sql = (
             "INSERT INTO tblFoodLog (amountBefore, amountFilled, time) values("
             + str(foodBowlValue)
             + ", "
@@ -132,45 +116,10 @@ def test():
             + ", "
             + str(datetime.now())
             + ");"
-        )
-        cursor.execute(sql)
-        dbconnect.commit() """
-    else:
-        print("failed")
-
-    time.sleep(2)
-
-    currentID = getMessage()["entry_id"]
-    sendMessage(1, waterToFill, foodToFill, "to bailey")
-    if waitResponse():
-        newMessage = getMessage()
-        print(newMessage["field1"])
-    else:
-        print("failed")
-
-
-def checkFillFood():
-    currentID = getMessage()["entry_id"]
-    sendMessage(2, "to jediael 1")
-    if waitResponse():
-        newMessage = getMessage()
-
-        foodBowlValue = newMessage["field2"]
-        foodStorageValue = newMessage["field1"]
-
-        foodToFill = int(portionSize) - int(foodBowlValue)
-    else:
-        print("failed")
-
-    if foodStorageValue < 100:
-        print("food storage empty")
-    elif foodBowlValue > 101:
-        print("food bowl full")
-    else:
-        currentID = getMessage()["entry_id"]
-        sendMessage(1, None, None, True, foodToFill)
-        if waitResponse:
-            print("done")
+            )
+            cursor.execute(sql)
+            dbconnect.commit()
+            time.sleep(1)
         else:
             print("failed")
 
@@ -187,15 +136,40 @@ def checkFillWater():
         waterToFill = int(waterBowlSize) - int(waterBowlValue)
     else:
         print("failed")
+        exit()
 
-    if waterStorageValue < 100:
+    if waterStorageValue < 1:
         print("water storage empty")
-    elif waterBowlValue > 400:
+    elif waterBowlValue > 1000000000:
         print("water bowl full")
     else:
+        time.sleep(1)
         currentID = getMessage()["entry_id"]
         sendMessage(1, True, waterToFill, None, None)
         if waitResponse:
             print("done")
+            sql = (
+            "INSERT INTO tblWaterLog (amountBefore, amountFilled, time) values("
+            + str(waterBowlValue)
+            + ", "
+            + str(waterToFill)
+            + ", "
+            + str(datetime.now())
+            + ");"
+            )
+            cursor.execute(sql)
+            dbconnect.commit()
+            time.sleep(1)
         else:
             print("failed")
+            sql = (
+            "INSERT INTO tblWaterLog (amountBefore, amountFilled, time) values("
+            + str(waterBowlValue)
+            + ", "
+            + str(waterToFill)
+            + ", "
+            + str(datetime.now())
+            + ");"
+            )
+            cursor.execute(sql)
+            dbconnect.commit()
