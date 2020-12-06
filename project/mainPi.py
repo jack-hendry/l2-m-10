@@ -113,9 +113,9 @@ def checkFillFood():
             + str(foodBowlValue)
             + ", "
             + str(foodToFill)
-            + ", "
+            + ", '"
             + str(datetime.now())
-            + ");"
+            + "');"
             )
             cursor.execute(sql)
             dbconnect.commit()
@@ -153,9 +153,9 @@ def checkFillWater():
             + str(waterBowlValue)
             + ", "
             + str(waterToFill)
-            + ", "
+            + ", '"
             + str(datetime.now())
-            + ");"
+            + "');"
             )
             cursor.execute(sql)
             dbconnect.commit()
@@ -167,9 +167,9 @@ def checkFillWater():
             + str(waterBowlValue)
             + ", "
             + str(waterToFill)
-            + ", "
+            + ", '"
             + str(datetime.now())
-            + ");"
+            + "');"
             )
             cursor.execute(sql)
             dbconnect.commit()
