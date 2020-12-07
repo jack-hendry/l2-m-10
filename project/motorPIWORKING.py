@@ -5,9 +5,14 @@ import json
 import time
 import RPi.GPIO as GPIO
 
+
+
+
+
+
 amountPerHalfTurn = 10.00  #Amount of food in grams dispensed by each half turn of the dispenser.
-flowRate = 10.00 #volume of water dispensed by the pump per second
-timeForHalfTurn = 10.00 #amount of time it takes to turn the motor a half revolution.
+flowRate = 7.00 #volume of water dispensed by the pump per second ml/s
+timeForHalfTurn = 0.27 #amount of time it takes to turn the motor a half revolution.
 
 #Configuring the TB6612 motor Controller
 GPIO.setmode(GPIO.BOARD)
@@ -20,7 +25,6 @@ GPIO.setup(37, GPIO.OUT) # Connected to BIN1
 GPIO.setup(16, GPIO.OUT) # Connected to BIN2
 GPIO.setup(15, GPIO.OUT) # Connected to PWMB
 GPIO.setup(13, GPIO.OUT) # Connected to STBY
-
 
 #enddif Motor 1 is for Water Pump
 
@@ -38,6 +42,8 @@ def readDataThingspeak():
     return (field1)
 
 
+
+#Function that sends a Message to the Main Raspberry PI to Inform it that it has received the message.
 def sendInfo():
     while True:
         message = "The messaged was received by Pi-Motor and the Motors are executing their sequence"
@@ -58,7 +64,7 @@ def sendInfo():
 
 
 
-
+#Activates the Motor
 def dispenseFood(foodAmount):
     revolutions = int(foodAmount / amountPerHalfTurn)
     while(revolutions>0):
@@ -67,7 +73,7 @@ def dispenseFood(foodAmount):
 
 
 
-
+#Activates the Motor function
 def dispenseWater(amountWater):
     secondsPumping = amountWater/flowRate
     waterMotor(secondsPumping)
@@ -81,7 +87,7 @@ def waterMotor(duration):
     GPIO.output(11, GPIO.LOW) # Set AIN2
     GPIO.output(13, GPIO.HIGH)# Disable STBY (standby)
 
-    # Wait while motor executes Motor executes for this amount of time.
+    # Wait while motor executes for this amount of time.
     time.sleep(duration)
 
     # Turn off motor
@@ -109,7 +115,7 @@ def foodMotor():
     GPIO.output(16, GPIO.LOW) # Set BIN2
     GPIO.output(15, GPIO.LOW) # Set PWMB
     GPIO.output(13, GPIO.LOW) # Set STBY
-    time.sleep(0.25)
+    time.sleep(0.66) #Wait for motor to come to a halt before continuing.
 
 
 
@@ -122,33 +128,54 @@ def foodMotor():
 
 #Checks if the current command instructs water pump
 def checkIfWater():
-    if ((currentCommand['field2'] == True) and (currentCommand['field3'] != None)):
-        dispenseWater(currentCommand['field3'])
+    if ((field['field3'] != None) ):
+        sendInfo()
+        amount 
+        dispenseWater(field['field3'])
+    else:
+        return
+    
+    
 
 
 #Checks if the current command instructs the food pump
 def checkIfFood():
-    if ((currentCommand['field4'] ==True) and (currentCommand['field5'] != None)):
-        dispenseFood(currentCommand['field5'])
+    if ((field['field5'] != None) ):
+        sendInfo()
+        dispenseFood(field['field5'])
+    else:
+        return
+    
+    
+
+
+
 
 
 
 
 
 #While Loop for execution
-while True: 
-    currentID = readDataThingspeak()['entry_id']
-    field = readDataThingspeak()
-    
-    if field['entry_id'] >= (currentID): 
-        currentID = field['entry_id'] 
-        if field['field1'] == '1':  #When a message is received, intended for this PI, the code below executes.
+while (True):
+        currentID = readDataThingspeak()['entry_id']
+        field = readDataThingspeak()
+        
+        if field['entry_id'] >= (currentID): 
+            currentID = field['entry_id'] 
+            if field['field1'] == '1':  #When a message is received, intended for this PI, the code below executes.
+                checkIfWater()
+                checkIfFood()
+                
+                
+                
+
             
-            currentCommand = field
-            sendInfo()
-            print(field['field2'])
-            print(field['field3'])
-            time.sleep(3)
+            
+
+
+
+     
+
 
             
             
