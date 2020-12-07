@@ -128,6 +128,7 @@ def foodMotor():
 
 #Checks if the current command instructs water pump
 def checkIfWater():
+    print(type(field['field3']))
     if ((field['field3'] != None) ):
         sendInfo()
         amount 
