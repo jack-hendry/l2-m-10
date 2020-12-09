@@ -14,10 +14,6 @@ amountPerHalfTurn = 10.00  #Amount of food in grams dispensed by each half turn 
 flowRate = 7.00 #volume of water dispensed by the pump per second ml/s
 
 
-
-
-
-
 #Configuring the TB6612 motor Controller
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
@@ -34,7 +30,7 @@ GPIO.setup(13, GPIO.OUT) # Connected to STBY
 #enddif Motor 1 is for Water Pump
 
 
-
+#function that reads from the ts channel and returns a feed, including entryID
 key = "AB2DLL1XSNYHIU2O"
 def readDataThingspeak():
     URl='https://api.thingspeak.com/channels/1173908/feeds.json?api_key=6G647UFZ4V0F7XL2&results=2'
@@ -68,8 +64,7 @@ def sendInfo():
             break
 
 
-
-#Activates the Motor
+#Pushes instructions to the motor based on the amount of food needed to be dispensed. 
 def dispenseFood(foodAmount):
     revolutions = int(foodAmount / amountPerHalfTurn)
     while(revolutions>0):
@@ -79,7 +74,7 @@ def dispenseFood(foodAmount):
 
 
 
-#Activates the Motor function
+#Activates the Motor function for an amount of time based on the flowrate
 def dispenseWater(amountWater):
     secondsPumping = amountWater/flowRate
     waterMotor(secondsPumping)
@@ -106,7 +101,7 @@ def waterMotor(duration):
     
     
 
-#Configures the GPIO pins to drive the motorB for the amount of time it takes to complete half of a revolution   
+#Drives motor until it rotates a half revolution, then for an instant the opposite direction to bring motor to a stop. 
 def foodMotor():
     GPIO.output(16, GPIO.LOW) # Set BIN2
     GPIO.output(37, GPIO.HIGH) #Set BIN1
@@ -133,7 +128,7 @@ def foodMotor():
     GPIO.output(15, GPIO.HIGH) # Set PWMB
     GPIO.output(13, GPIO.HIGH)#stby
 
-    # Wait 5 seconds
+   
     time.sleep(0.22)
     
     #reset
@@ -142,14 +137,12 @@ def foodMotor():
     GPIO.output(37, GPIO.LOW)#Set bin1
     GPIO.output(16, GPIO.LOW) # Set BIN2
     GPIO.output(15, GPIO.LOW) # Set PWMB
-    
-    
     time.sleep(2) #Wait for motor to come to a halt before continuing.
 
 
 
 
-#Checks if the current command instructs water pump
+#Checks if the current command instructs passes a value that can be used to instruct the pump
 def checkIfWater(field):
     
     if ((field[0] != 'None') ):
@@ -189,15 +182,15 @@ while (True):
         
         field = readDataThingspeak()
         
-        if field['entry_id'] > (currentID): 
+        if field['entry_id'] > (currentID): #Checks if the entryID of the feed is older than the previous one checked.
             currentID = field['entry_id']
             
             if field['field1'] == '1':  #When a message is received, intended for this PI, the code below executes.
-                currentCommand = (field['field2'], field['field3'])
+                currentCommand = (field['field2'], field['field3']) #only relevenet command to this code is field2, field 3. THis passes a tuple to the checkIF functions
                 checkIfWater(currentCommand)
                 checkIfFood(currentCommand)
                 
-        time.sleep(1)
+        time.sleep(1)  #TS only updates once per second so we dont need to check that often.
                 
                 
                 
