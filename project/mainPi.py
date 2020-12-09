@@ -9,7 +9,7 @@ from tkinter import *
 from tkinter.ttk import Combobox
 window=Tk()
 
-waterBowlSize = 1000
+waterBowlSize = 500
 waterToFill = 0
 foodToFill = 0
 currentID = 0
@@ -116,7 +116,7 @@ def checkFillFood():
         print("failed")
         exit()
 
-    if float(foodStorageValue) > 166:
+    if float(foodStorageValue) > 18:
         sendMail(
             "FitPet Notice For Your "+ typePet + " " + petName, "The food storage is low in your FitPet system.", ownerEmail
         )
@@ -130,6 +130,7 @@ def checkFillFood():
         currentID = getMessage()["entry_id"]
         sendMessage(1, None, foodToFill)
         if waitResponse(300):
+            print(getMessage()['field1'])
             sql = (
                 "INSERT INTO tblFoodLog (amountBefore, amountFilled, time) values("
                 + str(foodBowlValue)
@@ -162,7 +163,7 @@ def checkFillWater():
         print("failed")
         exit()
 
-    if float(waterStorageValue) > 150:
+    if float(waterStorageValue) > 18:
         sendMail(
             "FitPet Notice For Your "+ typePet + " " + petName, "The water storage is empty in your FitPet system.", ownerEmail
         )
@@ -172,14 +173,15 @@ def checkFillWater():
         currentID = getMessage()["entry_id"]
         sendMessage(1, waterToFill, None)
         if waitResponse(300):
+            print(getMessage()['field1'])
             sql = (
                 "INSERT INTO tblWaterLog (amountBefore, amountFilled, time) values("
                 + str(waterBowlValue)
                 + ", "
                 + str(waterToFill)
-                + ", "
+                + ", '"
                 + str(datetime.now())
-                + ");"
+                + "');"
             )
             cursor.execute(sql)
             dbconnect.commit()
@@ -197,6 +199,39 @@ def checkFillWater():
             )
             cursor.execute(sql)
             dbconnect.commit()
+
+def dailyReport():
+    #all of this is to get it in theformat that it is in in the database
+    today = str(datetime.now())
+    while(today[len(today)-1] != ' '):
+        today = today[:-1]
+    today = today[:-1]
+    sql = "select amountFIlled from tblFoodLog where time like '" + today + "%'"
+    cursor.execute(sql)
+    foodList = []
+    for r in cursor:
+        foodList.append(r[0])
+    foodEaten = sum(foodList)
+
+    sql = "select amountFIlled from tblWaterLog where time like '" + today + "%'"
+    cursor.execute(sql)
+    waterList = []
+    for r in cursor:
+        waterList.append(r[0])
+    waterDrank = sum(waterList)
+
+    sql = (
+                "INSERT INTO tblDailyLog (waterDrank, foodEaten, date) values("
+                + str(waterDrank)
+                + ", "
+                + str(foodEaten)
+                + ", '"
+                + str(datetime.now())
+                + "');"
+            )
+    cursor.execute(sql)
+    dbconnect.commit()
+    sendMail("Daily Nutrition of your " + typePet + " " + petName, "Your " + typePet + " " + petName + " ate " + str(foodEaten) + "g of food and drank " + str(waterDrank) + "mL of water today!", ownerEmail)
 
 class MyWindow:
     def __init__(self, win):
@@ -291,14 +326,17 @@ mealtimes = createMealTime(setNumberMeals)
 while True:
     currentMinute = datetime.now().minute
 
+    #checks if it is one of the mealtimes
     if (datetime.now().hour, datetime.now().minute) in mealtimes:
         checkFillFood()
 
-    if datetime.now().minute == 31 or datetime.now().minute == 45:
+    #what minutes every hour to run the water sequence
+    if datetime.now().minute == 15 or datetime.now().minute == 45:
         checkFillWater()
 
     if datetime.now().hour == 23 and datetime.now().minute == 59:
-        print("end of day report")
+        dailyReport
 
+    #waits until the next minute to run the loop again, so something doesnt happen twice
     while datetime.now().minute == currentMinute:
         time.sleep(5)
