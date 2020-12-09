@@ -1,3 +1,4 @@
+#all required imports
 import requests
 import urllib.parse
 import http.client
@@ -9,6 +10,7 @@ from tkinter import *
 from tkinter.ttk import Combobox
 window=Tk()
 
+#setting variables to avoid errors
 waterBowlSize = 500
 waterToFill = 0
 foodToFill = 0
@@ -19,10 +21,11 @@ waterStorageValue = 0
 waterBowlValue = 0
 ownerEmail = ""
 
+#database connection, make sure it points to the file location of the database
 dbconnect = sqlite3.connect("/home/pi/Documents/SYSC 3010/Labs/Project/projectdb.db")
 cursor = dbconnect.cursor()
 
-
+#function to send message over specific thingspeak channel
 def sendMessage(
     field1=None,
     field2=None,
@@ -60,7 +63,7 @@ def sendMessage(
     except:
         print("connection failed")
 
-
+#function to get the last message on a specified thingspeak channel
 def getMessage():
     url = "https://api.thingspeak.com/channels/1224435/feeds.json?api_key="
     key = "05F0ZK2NB2GHEBKO"
@@ -74,7 +77,7 @@ def getMessage():
 
     return channel1read
 
-
+#this is run when the pi is awaiting a message abck frm the other pis, returns true if successful, flase if no message was received in the given time
 def waitResponse(brokenAmount):
     currentID = getMessage()["entry_id"]
     broken = 0
@@ -86,7 +89,7 @@ def waitResponse(brokenAmount):
             return True
         time.sleep(0.1)
 
- 
+ #sends an email to the email specified when running the file. Subject and body are specified when called
 def sendMail(subject, body, email):
     GMAIL_USERNAME = "FitPet3010@gmail.com"  # change this to match your gmail account
     GMAIL_PASSWORD = "fitpet2020!!"
@@ -98,8 +101,9 @@ def sendMail(subject, body, email):
         msg = f"Subject: {subject}\n\n{body}"
         smtp.sendmail(GMAIL_USERNAME, email, msg)
 
-
+#this function checks the status of the food bowl and storage, then fills the food bowl accordingly.
 def checkFillFood():
+    #first it sets variables then checks the food bowl and storage
     foodStorageValue = 0
     foodBowlValue = 0
     currentID = getMessage()["entry_id"]
@@ -115,7 +119,8 @@ def checkFillFood():
     else:
         print("failed")
         exit()
-
+    
+    #cases for if the storage is empty or the food bowl is still full
     if float(foodStorageValue) > 18:
         sendMail(
             "FitPet Notice For Your "+ typePet + " " + petName, "The food storage is low in your FitPet system.", ownerEmail
@@ -124,6 +129,7 @@ def checkFillFood():
         sendMail(
             "FitPet Notice For Your "+ typePet + " " + petName, "Your pet's food bowl was still full from the last mealtime", ownerEmail
         )
+        #if everything is good, it sends a request to fill up the bowl
     else:
         print("Filling food up by :" + str(foodToFill))
         time.sleep(1)
@@ -146,7 +152,7 @@ def checkFillFood():
         else:
             print("failed")
 
-
+#function for checking status of water bowl and storage, filling accordingly
 def checkFillWater():
     currentID = getMessage()["entry_id"]
     sendMessage(3)
@@ -162,12 +168,13 @@ def checkFillWater():
     else:
         print("failed")
         exit()
-
+    #if water storage is empty
     if float(waterStorageValue) > 18:
         sendMail(
             "FitPet Notice For Your "+ typePet + " " + petName, "The water storage is empty in your FitPet system.", ownerEmail
         )
     else:
+        #sends request to fill up the water
         print("Filling water up by :" + str(waterToFill))
         time.sleep(1)
         currentID = getMessage()["entry_id"]
@@ -200,26 +207,32 @@ def checkFillWater():
             cursor.execute(sql)
             dbconnect.commit()
 
+#function to send the report at the end of the day and populate the database table
 def dailyReport():
     #all of this is to get it in theformat that it is in in the database
     today = str(datetime.now())
     while(today[len(today)-1] != ' '):
         today = today[:-1]
     today = today[:-1]
+    #selects all of the food entries from that day
     sql = "select amountFIlled from tblFoodLog where time like '" + today + "%'"
     cursor.execute(sql)
     foodList = []
     for r in cursor:
         foodList.append(r[0])
+        #sums them all up to get the amount of food eaten that day
     foodEaten = sum(foodList)
-
-    sql = "select amountFIlled from tblWaterLog where time like '" + today + "%'"
+    
+    #selects all of the water filled that day
+    sql = "select amountFilled from tblWaterLog where time like '" + today + "%'"
     cursor.execute(sql)
     waterList = []
     for r in cursor:
         waterList.append(r[0])
+        #sums them to get the water drank that day
     waterDrank = sum(waterList)
-
+    
+    #insert the results into the table
     sql = (
                 "INSERT INTO tblDailyLog (waterDrank, foodEaten, date) values("
                 + str(waterDrank)
@@ -231,8 +244,10 @@ def dailyReport():
             )
     cursor.execute(sql)
     dbconnect.commit()
+    #send an email to the user
     sendMail("Daily Nutrition of your " + typePet + " " + petName, "Your " + typePet + " " + petName + " ate " + str(foodEaten) + "g of food and drank " + str(waterDrank) + "mL of water today!", ownerEmail)
 
+#class for the GUI on startup
 class MyWindow:
     def __init__(self, win):
         self.lbl5 = Label(win, text = "Type of pet:")
@@ -287,7 +302,8 @@ class MyWindow:
         self.r4.place(x=300,y=300)
         self.b1=Button(win, text='Submit', command = self.submit)
         self.b1.place(x=150, y=350)
-
+    
+    #when you press submit on the gui
     def submit(self): # input 2 variables
         global typePet
         global breedSize
@@ -307,6 +323,7 @@ class MyWindow:
         portionSize = dailyFood/setNumberMeals
         window.destroy()
 
+#this creates preset mealtimes depending on how many meals were chosen
 def createMealTime(frequency):
         if(frequency==2):
                 return [(8,0),(18,0)]
@@ -317,12 +334,15 @@ def createMealTime(frequency):
         else:  #this is the testing one
                 return [(datetime.now().hour,datetime.now().minute)]
 
+#open the gui first
 mywin=MyWindow(window)
 window.title('FitPet')
 window.geometry("500x400+10+10")
 window.mainloop()
+#when the gui is done create the mealtimes
 mealtimes = createMealTime(setNumberMeals)
 
+#main loop
 while True:
     currentMinute = datetime.now().minute
 
